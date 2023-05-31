@@ -1,9 +1,9 @@
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth.middlewares.js";
-import { getUsers } from "../controllers/user.controllers.js";
+import { getUsersBySearchText } from "../controllers/user.controllers.js";
 
 const userRouter = Router();
 
-userRouter.get("/users", authenticate, getUsers);
+userRouter.post("/users", authenticate, getUsersBySearchText);
 
 export default userRouter;

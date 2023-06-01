@@ -1,16 +1,12 @@
 import { insertPost, listLast20Posts } from "../repositories/posts.repository.js";
-import { getUserByEmail } from "../repositories/user.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
-    const { email, shared_link, description } = req.body;
+    const { id } = req.tokenData;
+    const { shared_link, description } = req.body;
 
     try {
-        const user = await getUserByEmail(email);
-        if (!user.rowCount) return res.status(401).send({ message: "Unauthorized" });
-
-        const user_id = user.rows[0].id;
-        await insertPost(user_id, shared_link, description);
+        await insertPost(id, shared_link, description);
 
         res.sendStatus(200);
     } catch (err) {
@@ -21,9 +17,9 @@ export async function publishPost(req, res) {
 export async function getPosts(req, res) {
     try {
         const posts = await listLast20Posts();
-        
-        if(!posts.rowCount) return res.status(204).send({message: "There are no posts yet"});
-        
+
+        if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
+
         const postsWithMetadata = await getMetadataForEachLink(posts.rows)
 
         res.status(200).send(postsWithMetadata);

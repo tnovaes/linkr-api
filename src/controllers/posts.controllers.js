@@ -1,4 +1,4 @@
-import { insertPost, listLast20Posts } from "../repositories/post.repository.js";
+import { insertPost, listLast20Posts } from "../repositories/posts.repository.js";
 import { getUserByEmail } from "../repositories/user.repository.js";
 import urlMetadata from "url-metadata";
 

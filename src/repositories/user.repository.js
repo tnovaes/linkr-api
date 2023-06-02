@@ -12,6 +12,9 @@ export function createUser(name, email, password, avatar) {
 }
 
 export function getUsersBySearchTextDB(id, searchText) {
-    return db.query(`SELECT * FROM users WHERE id <> $1 AND name ILIKE $2`, [id, `${searchText}%`]);
+    return db.query(`SELECT id,name,avatar FROM users WHERE id <> $1 AND name ILIKE $2`, [id, `${searchText}%`]);
 
+}
+export function getUserPhotoDB(id) {
+    return db.query(`SELECT avatar FROM users WHERE id = $1`, [id]);
 }

@@ -1,5 +1,4 @@
-import { getPostsByUserIDDB } from "../repositories/posts.repository.js";
-import { getUsersBySearchTextDB } from "../repositories/user.repository.js";
+import { getUserPhotoDB, getUsersBySearchTextDB } from "../repositories/user.repository.js";
 
 export async function getUsersBySearchText(req, res) {
     const { id } = req.tokenData;
@@ -12,11 +11,11 @@ export async function getUsersBySearchText(req, res) {
     }
 }
 
-export async function getPostsByUserID(req, res) {
+export async function getUserPhoto(req, res) {
     try {
-        const { id } = req.params
-        const user = await getPostsByUserIDDB(id)
-        res.send(user.rows[0])
+        const { id } = req.tokenData
+        const avatar = await getUserPhotoDB(id)
+        res.send(avatar.rows[0])
     } catch (err) {
         res.status(500).send(err.message);
     }

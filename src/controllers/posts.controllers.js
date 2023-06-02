@@ -1,4 +1,4 @@
-import { insertPost, listLast20Posts } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
@@ -55,5 +55,16 @@ async function getMetadataForEachLink(posts) {
         }
     });
 
+    
     return Promise.all(metadataPromises);
+}
+
+export async function getPostsByUserID(req, res) {
+    try {
+        const { id } = req.params
+        const user = await getPostsByUserIDDB(id)
+        res.send(user.rows[0])
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 }

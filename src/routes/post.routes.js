@@ -3,7 +3,7 @@ import { validateSchema } from "../middlewares/validateSchemas.js";
 import { postSchema } from "../schemas/post.schema.js";
 import { getPosts, publishPost } from "../controllers/posts.controllers.js";
 import { authenticate } from "../middlewares/auth.middlewares.js";
-import { getPostsByUserID } from "../controllers/user.controllers.js";
+import { getPostsByUserID } from "../controllers/posts.controllers.js";
 
 const postRouter = Router();
 

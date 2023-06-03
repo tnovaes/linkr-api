@@ -39,3 +39,14 @@ export function listLast20Posts() {
     LIMIT 20;
     `);
 }
+
+export function hashtagTop10(){
+    return db.query(`
+        SELECT COUNT(*) AS hashtag_count, hashtags_posts.hashtag_id, hashtags.name AS name
+        FROM hashtags_posts
+        JOIN hashtags ON hashtags.id = hashtags_posts.hashtag_id
+        GROUP BY hashtags_posts.hashtag_id, hashtags.name
+        ORDER BY hashtag_count DESC
+        LIMIT 10;
+    `)
+}

@@ -1,9 +1,10 @@
-import { findHashtagByIDDB } from "../repositories/hashtags.repository.js";
+import { findHashtagDB } from "../repositories/hashtags.repository.js";
 
 export async function validateHashtagID(req, res, next) {
-    const { id } = req.params;
+    const { name } = req.params;
+    const hashtag = "#"+name;
     try {
-        const response = await findHashtagByIDDB(id);
+        const response = await findHashtagDB(hashtag);
         if (response.rowCount === 0) return res.status(404).send({ message: "Hashtag não encontrada" });
         next();
     } catch (err) {

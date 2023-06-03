@@ -1,5 +1,5 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagIDDB } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
@@ -86,11 +86,11 @@ export async function getPostsByUserID(req, res) {
     }
 }
 
-export async function getPostsByHashtagID(req, res) {
+export async function getPostsByHashtagName(req, res) {
     try {
-        const { id } = req.params
-
-        const posts = await getPostsByHashtagIDDB(id);
+        const { name } = req.params
+        const hashtag = "#"+name;
+        const posts = await getPostsByHashtagDB(hashtag);
         const { rows: hashtags } = await hashtagTop10DB();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
 

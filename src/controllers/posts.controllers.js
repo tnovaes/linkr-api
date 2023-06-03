@@ -1,4 +1,5 @@
-import { insertPost, listLast20Posts, getPostsByUserIDDB, hashtagTop10, findHashtag, createHashtag, addHashtagPost } from "../repositories/posts.repository.js";
+import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagIDDB } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
@@ -10,15 +11,15 @@ export async function publishPost(req, res) {
         const postID = response[0].id;
         if (postHashtags) {
             for (let i = 0; i < postHashtags.length; i++) {
-                const findResponse = await findHashtag(postHashtags[i]);
+                const findResponse = await findHashtagDB(postHashtags[i]);
                 let hashtagID = "";
                 if (findResponse.rowCount === 0){
-                    const createResponse  = await createHashtag(postHashtags[i])
+                    const createResponse  = await createHashtagDB(postHashtags[i])
                     hashtagID = createResponse.rows[0].id;
                 } else {
                     hashtagID = findResponse.rows[0].id;
                 }
-                await addHashtagPost(postID, hashtagID);
+                await addHashtagPostDB(postID, hashtagID);
             }
         } else {
             console.log("nao possuo hashtags")
@@ -32,7 +33,7 @@ export async function publishPost(req, res) {
 export async function getPosts(req, res) {
     try {
         const posts = await listLast20Posts();
-        const { rows: hashtags } = await hashtagTop10();
+        const { rows: hashtags } = await hashtagTop10DB();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
 
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
@@ -80,6 +81,23 @@ export async function getPostsByUserID(req, res) {
         const { id } = req.params
         const user = await getPostsByUserIDDB(id)
         res.send(user.rows[0])
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
+
+export async function getPostsByHashtagID(req, res) {
+    try {
+        const { id } = req.params
+
+        const posts = await getPostsByHashtagIDDB(id);
+        const { rows: hashtags } = await hashtagTop10DB();
+        if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
+
+        const postsWithMetadata = await getMetadataForEachLink(posts.rows);
+
+        const response = [postsWithMetadata, hashtags];
+        res.status(200).send(response);
     } catch (err) {
         res.status(500).send(err.message);
     }

@@ -37,6 +37,7 @@ async function getMetadataForEachLink(posts) {
                 avatar: post.avatar,
                 description: post.description,
                 shared_link: post.shared_link,
+                post_owner: post.user_id,
                 link_title: metadata.title,
                 link_description: metadata.description,
                 link_image: metadata.image
@@ -48,6 +49,7 @@ async function getMetadataForEachLink(posts) {
                 avatar: post.avatar,
                 description: post.description,
                 shared_link: post.shared_link,
+                post_owner: post.user_id,
                 link_title: null,
                 link_description: null,
                 link_image: null

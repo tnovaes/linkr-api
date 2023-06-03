@@ -1,13 +1,28 @@
-import { insertPost, listLast20Posts, getPostsByUserIDDB, hashtagTop10 } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, hashtagTop10, findHashtag, createHashtag, addHashtagPost } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
     const { id } = req.tokenData;
     const { shared_link, description } = req.body;
-
+    const postHashtags = description.match(/#\w+/g);
     try {
-        await insertPost(id, shared_link, description);
-
+        const  { rows : response } = await insertPost(id, shared_link, description);
+        const postID = response[0].id;
+        if (postHashtags) {
+            for (let i = 0; i < postHashtags.length; i++) {
+                const findResponse = await findHashtag(postHashtags[i]);
+                let hashtagID = "";
+                if (findResponse.rowCount === 0){
+                    const createResponse  = await createHashtag(postHashtags[i])
+                    hashtagID = createResponse.rows[0].id;
+                } else {
+                    hashtagID = findResponse.rows[0].id;
+                }
+                await addHashtagPost(postID, hashtagID);
+            }
+        } else {
+            console.log("nao possuo hashtags")
+        }
         res.sendStatus(200);
     } catch (err) {
         res.status(500).send(err.message);
@@ -17,12 +32,12 @@ export async function publishPost(req, res) {
 export async function getPosts(req, res) {
     try {
         const posts = await listLast20Posts();
-        const { rows : hashtags } = await hashtagTop10();
+        const { rows: hashtags } = await hashtagTop10();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
 
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
 
-        const response = [postsWithMetadata , hashtags];
+        const response = [postsWithMetadata, hashtags];
         res.status(200).send(response);
     } catch (err) {
         res.status(500).send(err.message);
@@ -58,7 +73,7 @@ async function getMetadataForEachLink(posts) {
         }
     });
 
-    
+
     return Promise.all(metadataPromises);
 }
 

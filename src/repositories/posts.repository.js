@@ -32,10 +32,21 @@ export function insertPost(user_id, shared_link, description) {
 
 export function listLast20Posts() {
     return db.query(`
-    SELECT posts.shared_link, posts.description, users.name, users.avatar
+    SELECT posts.shared_link, posts.description, posts.user_id, users.name, users.avatar
     FROM posts
     JOIN users ON posts.user_id = users.id
     ORDER BY posts.created_at DESC
     LIMIT 20;
     `);
+}
+
+export function hashtagTop10(){
+    return db.query(`
+        SELECT COUNT(*) AS hashtag_count, hashtags_posts.hashtag_id, hashtags.name AS name
+        FROM hashtags_posts
+        JOIN hashtags ON hashtags.id = hashtags_posts.hashtag_id
+        GROUP BY hashtags_posts.hashtag_id, hashtags.name
+        ORDER BY hashtag_count DESC
+        LIMIT 10;
+    `)
 }

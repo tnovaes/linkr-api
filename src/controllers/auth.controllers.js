@@ -28,7 +28,7 @@ export async function signIn(req, res) {
         if (!isValidPassword) return res.status(401).send({ message: "Unauthorized" });
         const token = jwt.sign({id: user_id}, process.env.JWT_PASSWORD);
         createSession(token, user_id);
-        res.send({token});
+        res.send({token, id: user_id});
     } catch (err) {
         res.status(500).send(err.message);
     }

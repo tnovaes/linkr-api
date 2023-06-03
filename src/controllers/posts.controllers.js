@@ -1,4 +1,4 @@
-import { insertPost, listLast20Posts, getPostsByUserIDDB } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, hashtagTop10 } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
@@ -17,12 +17,13 @@ export async function publishPost(req, res) {
 export async function getPosts(req, res) {
     try {
         const posts = await listLast20Posts();
-
+        const { rows : hashtags } = await hashtagTop10();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
 
-        const postsWithMetadata = await getMetadataForEachLink(posts.rows)
+        const postsWithMetadata = await getMetadataForEachLink(posts.rows);
 
-        res.status(200).send(postsWithMetadata);
+        const response = [postsWithMetadata , hashtags];
+        res.status(200).send(response);
     } catch (err) {
         res.status(500).send(err.message);
     }
@@ -37,6 +38,7 @@ async function getMetadataForEachLink(posts) {
                 avatar: post.avatar,
                 description: post.description,
                 shared_link: post.shared_link,
+                post_owner: post.user_id,
                 link_title: metadata.title,
                 link_description: metadata.description,
                 link_image: metadata.image
@@ -48,6 +50,7 @@ async function getMetadataForEachLink(posts) {
                 avatar: post.avatar,
                 description: post.description,
                 shared_link: post.shared_link,
+                post_owner: post.user_id,
                 link_title: null,
                 link_description: null,
                 link_image: null

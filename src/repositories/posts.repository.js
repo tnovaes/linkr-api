@@ -25,7 +25,7 @@ export function getPostsByUserIDDB(id) {
 export function insertPost(user_id, shared_link, description) {
     return db.query(`
         INSERT INTO posts (user_id, shared_link, description)
-        VALUES ($1, $2, $3);`,
+        VALUES ($1, $2, $3) RETURNING id;`,
         [user_id, shared_link, description]
     );
 }
@@ -49,4 +49,28 @@ export function hashtagTop10(){
         ORDER BY hashtag_count DESC
         LIMIT 10;
     `)
+}
+
+export function findHashtag(hashtag){
+    return db.query(`
+        SELECT * FROM hashtags
+        WHERE name = $1 ;`,
+        [hashtag]
+    );
+}
+
+export function createHashtag(hashtag){
+    return db.query(`
+        INSERT INTO hashtags (name)
+        VALUES ($1) RETURNING id;`,
+        [hashtag]
+    );
+}
+
+export function addHashtagPost(postID, hashtagID){
+    return db.query(`
+        INSERT INTO hashtags_posts (post_id, hashtag_id)
+        VALUES ($1, $2);`,
+        [postID, hashtagID]
+    );
 }

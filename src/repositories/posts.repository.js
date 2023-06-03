@@ -40,37 +40,14 @@ export function listLast20Posts() {
     `);
 }
 
-export function hashtagTop10(){
+export function getPostsByHashtagIDDB(id){
     return db.query(`
-        SELECT COUNT(*) AS hashtag_count, hashtags_posts.hashtag_id, hashtags.name AS name
-        FROM hashtags_posts
-        JOIN hashtags ON hashtags.id = hashtags_posts.hashtag_id
-        GROUP BY hashtags_posts.hashtag_id, hashtags.name
-        ORDER BY hashtag_count DESC
-        LIMIT 10;
-    `)
-}
-
-export function findHashtag(hashtag){
-    return db.query(`
-        SELECT * FROM hashtags
-        WHERE name = $1 ;`,
-        [hashtag]
-    );
-}
-
-export function createHashtag(hashtag){
-    return db.query(`
-        INSERT INTO hashtags (name)
-        VALUES ($1) RETURNING id;`,
-        [hashtag]
-    );
-}
-
-export function addHashtagPost(postID, hashtagID){
-    return db.query(`
-        INSERT INTO hashtags_posts (post_id, hashtag_id)
-        VALUES ($1, $2);`,
-        [postID, hashtagID]
+        SELECT posts.shared_link, posts.description, users.name, users.avatar, hashtags_posts.hashtag_id
+        FROM posts
+        JOIN users ON posts.user_id = users.id
+        JOIN hashtags_posts ON hashtags_posts.post_id = posts.id
+        WHERE hashtags_posts.hashtag_id = $1
+        ORDER BY posts.created_at DESC;`,
+        [id]
     );
 }

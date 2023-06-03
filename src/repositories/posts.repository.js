@@ -40,14 +40,16 @@ export function listLast20Posts() {
     `);
 }
 
-export function getPostsByHashtagIDDB(id){
+export function getPostsByHashtagDB(name){
     return db.query(`
-        SELECT posts.shared_link, posts.description, users.name, users.avatar, hashtags_posts.hashtag_id
+        SELECT posts.shared_link, posts.description, users.name, users.avatar,
+        hashtags_posts.hashtag_id, hashtags.name AS hashtag_name
         FROM posts
         JOIN users ON posts.user_id = users.id
         JOIN hashtags_posts ON hashtags_posts.post_id = posts.id
-        WHERE hashtags_posts.hashtag_id = $1
+        JOIN hashtags ON hashtags_posts.hashtag_id = hashtags.id
+        WHERE hashtags.name = $1
         ORDER BY posts.created_at DESC;`,
-        [id]
+        [name]
     );
 }

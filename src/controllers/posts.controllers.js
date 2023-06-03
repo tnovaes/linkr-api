@@ -52,6 +52,7 @@ async function getMetadataForEachLink(posts) {
             return {
                 name: post.name,
                 avatar: post.avatar,
+                post_id: post.id,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
@@ -64,6 +65,7 @@ async function getMetadataForEachLink(posts) {
             return {
                 name: post.name,
                 avatar: post.avatar,
+                post_id: post.id,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,

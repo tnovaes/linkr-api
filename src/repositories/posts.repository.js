@@ -32,7 +32,7 @@ export function insertPost(user_id, shared_link, description) {
 
 export function listLast20Posts() {
     return db.query(`
-    SELECT posts.shared_link, posts.description, posts.user_id, users.name, users.avatar
+    SELECT posts.shared_link, posts.description, posts.user_id, posts.id, users.name, users.avatar
     FROM posts
     JOIN users ON posts.user_id = users.id
     ORDER BY posts.created_at DESC
@@ -52,4 +52,28 @@ export function getPostsByHashtagDB(name){
         ORDER BY posts.created_at DESC;`,
         [name]
     );
+}
+
+export function getOwner(id){
+    return db.query(`
+    SELECT posts.user_id
+    FROM posts
+    WHERE id=$1
+    `,[id])
+}
+
+export function deletePost(id){
+    return db.query(`
+    DELETE
+    FROM Posts
+    WHERE id=$1
+    `,[id])
+}
+
+export function deleteHashtag(id){
+    return db.query(`
+    DELETE
+    FROM hashtags_posts
+    WHERE post_id=$1
+    `,[id])
 }

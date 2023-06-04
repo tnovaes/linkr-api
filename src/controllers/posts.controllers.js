@@ -1,5 +1,5 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
@@ -52,6 +52,7 @@ async function getMetadataForEachLink(posts) {
             return {
                 name: post.name,
                 avatar: post.avatar,
+                post_id: post.id,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
@@ -64,6 +65,7 @@ async function getMetadataForEachLink(posts) {
             return {
                 name: post.name,
                 avatar: post.avatar,
+                post_id: post.id,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
@@ -101,6 +103,20 @@ export async function getPostsByHashtagName(req, res) {
         const response = [postsWithMetadata, hashtags];
         res.status(200).send(response);
     } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
+
+export async function deleteByID(req,res) {
+    const data = req.tokenData
+    const {id} = req.params
+    try{
+        const owner = await getOwner(id);
+        if(!owner.rows[0] || owner.rows[0].user_id!=data.id){return res.sendStatus(405)}
+        await deleteHashtag(id);
+        await deletePost(id);
+        res.sendStatus(200)
+    }catch (err) {
         res.status(500).send(err.message);
     }
 }

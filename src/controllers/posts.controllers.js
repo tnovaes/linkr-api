@@ -1,4 +1,4 @@
-import { insertPost, listLast20Posts, getPostsByUserIDDB } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getOwner, deletePost, deleteHashtag } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 
 export async function publishPost(req, res) {
@@ -69,6 +69,20 @@ export async function getPostsByUserID(req, res) {
         const user = await getPostsByUserIDDB(id)
         res.send(user.rows[0])
     } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
+
+export async function deleteByID(req,res) {
+    const data = req.tokenData
+    const {id} = req.params
+    try{
+        const owner = await getOwner(id);
+        if(!owner.rows[0] || owner.rows[0].user_id!=data.id){return res.sendStatus(405)}
+        await deleteHashtag(id);
+        await deletePost(id);
+        res.sendStatus(200)
+    }catch (err) {
         res.status(500).send(err.message);
     }
 }

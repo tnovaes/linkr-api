@@ -39,3 +39,27 @@ export function listLast20Posts() {
     LIMIT 20;
     `);
 }
+
+export function getOwner(id){
+    return db.query(`
+    SELECT posts.user_id
+    FROM posts
+    WHERE id=$1
+    `,[id])
+}
+
+export function deletePost(id){
+    return db.query(`
+    DELETE
+    FROM Posts
+    WHERE id=$1
+    `,[id])
+}
+
+export function deleteHashtag(id){
+    return db.query(`
+    DELETE
+    FROM hashtags_posts
+    WHERE post_id=$1
+    `,[id])
+}

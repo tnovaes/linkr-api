@@ -28,7 +28,7 @@ export function hashtagTop10DB(){
 export function findHashtagDB(hashtag){
     return db.query(`
         SELECT * FROM hashtags
-        WHERE name = $1 ;`,
+        WHERE name ILIKE $1 ;`,
         [hashtag]
     );
 }

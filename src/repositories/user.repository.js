@@ -18,3 +18,7 @@ export function getUsersBySearchTextDB(id, searchText) {
 export function getUserPhotoDB(id) {
     return db.query(`SELECT avatar FROM users WHERE id = $1`, [id]);
 }
+
+export function getUserByIDDB(id) {
+    return db.query(`SELECT name FROM users WHERE id = $1;`, [id]);
+}

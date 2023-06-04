@@ -2,7 +2,7 @@ import { db } from "../database/database.connection.js";
 
 export function getPostsByUserIDDB(id) {
     return db.query(`
-        SELECT posts.shared_link, posts.description, users.name, users.avatar
+        SELECT posts.shared_link, posts.description, users.name, users.avatar, posts.user_id,
             FROM posts
             JOIN users ON posts.user_id = users.id
             JOIN hashtags_posts ON hashtags_posts.post_id = posts.id
@@ -32,7 +32,7 @@ export function listLast20Posts() {
 
 export function getPostsByHashtagDB(name){
     return db.query(`
-        SELECT posts.shared_link, posts.description, users.name, users.avatar,
+        SELECT posts.shared_link, posts.description, posts.user_id, users.name, users.avatar, 
         hashtags_posts.hashtag_id, hashtags.name AS hashtag_name
         FROM posts
         JOIN users ON posts.user_id = users.id

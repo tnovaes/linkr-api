@@ -2,24 +2,14 @@ import { db } from "../database/database.connection.js";
 
 export function getPostsByUserIDDB(id) {
     return db.query(`
-    SELECT 
-    u.name, 
-    u.avatar, 
-    (SELECT json_agg(posts_ord)
-      FROM (
-        SELECT json_build_object('shared_link', p.shared_link, 'description', p.description) as posts_ord
-        FROM posts p
-        WHERE p.user_id = $1
-        ORDER BY p.created_at DESC
-        LIMIT 20
-        ) AS posts_sub
-        ) AS posts
-    FROM  users u
-    WHERE u.id = $1
-    GROUP BY
-    u.name,
-    u.avatar`
-    , [id]);
+        SELECT posts.shared_link, posts.description, users.name, users.avatar
+            FROM posts
+            JOIN users ON posts.user_id = users.id
+            JOIN hashtags_posts ON hashtags_posts.post_id = posts.id
+            WHERE posts.user_id = $1
+            ORDER BY posts.created_at DESC;`,
+        [id]
+    );
 }
 
 export function insertPost(user_id, shared_link, description) {

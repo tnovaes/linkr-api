@@ -83,8 +83,14 @@ async function getMetadataForEachLink(posts) {
 export async function getPostsByUserID(req, res) {
     try {
         const { id } = req.params
-        const user = await getPostsByUserIDDB(id)
-        res.send(user.rows[0])
+        const posts = await getPostsByUserIDDB(id)
+        const { rows: hashtags } = await hashtagTop10DB();
+        if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
+
+        const postsWithMetadata = await getMetadataForEachLink(posts.rows);
+
+        const response = [postsWithMetadata, hashtags];
+        res.status(200).send(response);
     } catch (err) {
         res.status(500).send(err.message);
     }

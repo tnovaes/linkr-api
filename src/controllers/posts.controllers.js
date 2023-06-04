@@ -1,6 +1,7 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
 import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
+import { getUserByIDDB } from "../repositories/user.repository.js";
 
 export async function publishPost(req, res) {
     const { id } = req.tokenData;
@@ -83,13 +84,13 @@ async function getMetadataForEachLink(posts) {
 export async function getPostsByUserID(req, res) {
     try {
         const { id } = req.params
-        const posts = await getPostsByUserIDDB(id)
+        const posts = await getPostsByUserIDDB(id);
         const { rows: hashtags } = await hashtagTop10DB();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
-
+        const {rows: user} = await getUserByIDDB(id);
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
 
-        const response = [postsWithMetadata, hashtags];
+        const response = [postsWithMetadata, hashtags, user];
         res.status(200).send(response);
     } catch (err) {
         res.status(500).send(err.message);

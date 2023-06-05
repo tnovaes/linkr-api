@@ -46,41 +46,7 @@ export async function getPosts(req, res) {
     }
 }
 
-async function getMetadataForEachLink(posts) {
-    const metadataPromises = posts.map(async (post) => {
-        try {
-            const metadata = await urlMetadata(post.shared_link);
-            return {
-                name: post.name,
-                avatar: post.avatar,
-                post_id: post.id || post.post_id,
-                likes:post.likes,
-                description: post.description,
-                shared_link: post.shared_link,
-                post_owner: post.user_id,
-                link_title: metadata.title,
-                link_description: metadata.description,
-                link_image: metadata.image
-            };
-        } catch (error) {
-            console.error(`Error to obtain metadata for URL: ${post.shared_link}`, error);
-            return {
-                name: post.name,
-                avatar: post.avatar,
-                post_id: post.id,
-                description: post.description,
-                shared_link: post.shared_link,
-                post_owner: post.user_id,
-                link_title: null,
-                link_description: null,
-                link_image: null
-            };
-        }
-    });
 
-
-    return Promise.all(metadataPromises);
-}
 
 export async function getPostsByUserID(req, res) {
     try {
@@ -141,4 +107,43 @@ export async function editPost(req,res){
     }catch (err) {
         res.status(500).send(err.message);
     }
+}
+
+async function getMetadataForEachLink(posts) {
+    const metadataPromises = posts.map(async (post) => {
+        try {
+            const metadata = urlMetadata(post.shared_link);
+            console.clear()
+            console.log(post.id)
+            console.log(post.post_id)
+            return {
+                name: post.name,
+                avatar: post.avatar,
+                post_id: post.id || post.post_id,
+                likes:post.likes,
+                description: post.description,
+                shared_link: post.shared_link,
+                post_owner: post.user_id,
+                link_title: metadata.title,
+                link_description: metadata.description,
+                link_image: metadata.image
+            };
+        } catch (error) {
+            console.error(`Error to obtain metadata for URL: ${post.shared_link}`, error);
+            return {
+                name: post.name,
+                avatar: post.avatar,
+                post_id: post.id,
+                description: post.description,
+                shared_link: post.shared_link,
+                post_owner: post.user_id,
+                link_title: null,
+                link_description: null,
+                link_image: null
+            };
+        }
+    });
+
+
+    return await Promise.all(metadataPromises);
 }

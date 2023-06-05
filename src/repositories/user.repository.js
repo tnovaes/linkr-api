@@ -22,3 +22,7 @@ export function getUserPhotoDB(id) {
 export function getUserByIDDB(id) {
     return db.query(`SELECT name FROM users WHERE id = $1;`, [id]);
 }
+
+export function getUserLikesDB(id) {
+    return db.query(`SELECT post_id FROM likes WHERE user_id=$1;`, [id]);
+}

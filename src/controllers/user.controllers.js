@@ -24,7 +24,6 @@ export async function getUserLikes(req, res) {
     try {
         const { id } = req.tokenData
         const likes = await getUserLikesDB(id)
-        console.log(likes.rows)
         res.send(likes.rows)
     } catch (err) {
         res.status(500).send(err.message);

@@ -53,7 +53,8 @@ async function getMetadataForEachLink(posts) {
             return {
                 name: post.name,
                 avatar: post.avatar,
-                post_id: post.id,
+                post_id: post.id || post.post_id,
+                likes:post.likes,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
@@ -85,6 +86,7 @@ export async function getPostsByUserID(req, res) {
     try {
         const { id } = req.params
         const posts = await getPostsByUserIDDB(id);
+        console.log(posts.rows)
         const { rows: hashtags } = await hashtagTop10DB();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
         const {rows: user} = await getUserByIDDB(id);

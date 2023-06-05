@@ -5,7 +5,6 @@ export function getPostsByUserIDDB(id) {
         SELECT posts.shared_link, posts.description, users.name, users.avatar, posts.user_id
             FROM posts
             JOIN users ON posts.user_id = users.id
-            JOIN hashtags_posts ON hashtags_posts.post_id = posts.id
             WHERE posts.user_id = $1
             ORDER BY posts.created_at DESC;`,
         [id]

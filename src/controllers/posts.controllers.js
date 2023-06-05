@@ -86,7 +86,6 @@ export async function getPostsByUserID(req, res) {
     try {
         const { id } = req.params
         const posts = await getPostsByUserIDDB(id);
-        console.log(posts.rows)
         const { rows: hashtags } = await hashtagTop10DB();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
         const {rows: user} = await getUserByIDDB(id);
@@ -134,7 +133,6 @@ export async function editPost(req,res){
     const {id} = req.params
     const data = req.tokenData
     const {description} = req.body
-    console.log(req.body,description,id)
     try{
         const owner = await getOwner(id);
         if(!owner.rows[0] || owner.rows[0].user_id!=data.id){return res.sendStatus(405)}

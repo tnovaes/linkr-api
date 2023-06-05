@@ -55,7 +55,7 @@ export function getOwner(id){
 export function deletePost(id){
     return db.query(`
     DELETE
-    FROM Posts
+    FROM posts
     WHERE id=$1
     `,[id])
 }
@@ -66,4 +66,12 @@ export function deleteHashtag(id){
     FROM hashtags_posts
     WHERE post_id=$1
     `,[id])
+}
+
+export function editPostDB(id,description){
+    return db.query(`
+    UPDATE posts
+    SET description=$1
+    WHERE id=$2
+    `,[description,id])
 }

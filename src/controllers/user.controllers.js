@@ -1,4 +1,4 @@
-import { getUserPhotoDB, getUsersBySearchTextDB } from "../repositories/user.repository.js";
+import { getUserLikesDB, getUserPhotoDB, getUsersBySearchTextDB } from "../repositories/user.repository.js";
 
 export async function getUsersBySearchText(req, res) {
     const { id } = req.tokenData;
@@ -16,6 +16,16 @@ export async function getUserPhoto(req, res) {
         const { id } = req.tokenData
         const avatar = await getUserPhotoDB(id)
         res.send(avatar.rows[0])
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
+}
+export async function getUserLikes(req, res) {
+    try {
+        const { id } = req.tokenData
+        const likes = await getUserLikesDB(id)
+        console.log(likes.rows)
+        res.send(likes.rows)
     } catch (err) {
         res.status(500).send(err.message);
     }

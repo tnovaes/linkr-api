@@ -1,5 +1,5 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 
@@ -122,6 +122,21 @@ export async function deleteByID(req,res) {
         if(!owner.rows[0] || owner.rows[0].user_id!=data.id){return res.sendStatus(405)}
         await deleteHashtag(id);
         await deletePost(id);
+        res.sendStatus(200)
+    }catch (err) {
+        res.status(500).send(err.message);
+    }
+}
+
+export async function editPost(req,res){
+    const {id} = req.params
+    const data = req.tokenData
+    const {description} = req.body
+    console.log(req.body,description,id)
+    try{
+        const owner = await getOwner(id);
+        if(!owner.rows[0] || owner.rows[0].user_id!=data.id){return res.sendStatus(405)}
+        await editPostDB(id,description);
         res.sendStatus(200)
     }catch (err) {
         res.status(500).send(err.message);

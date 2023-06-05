@@ -8,14 +8,14 @@ export async function publishPost(req, res) {
     const { shared_link, description } = req.body;
     const postHashtags = description.match(/#\w+/g);
     try {
-        const  { rows : response } = await insertPost(id, shared_link, description);
+        const { rows: response } = await insertPost(id, shared_link, description);
         const postID = response[0].id;
         if (postHashtags) {
             for (let i = 0; i < postHashtags.length; i++) {
                 const findResponse = await findHashtagDB(postHashtags[i]);
                 let hashtagID = "";
-                if (findResponse.rowCount === 0){
-                    const createResponse  = await createHashtagDB(postHashtags[i])
+                if (findResponse.rowCount === 0) {
+                    const createResponse = await createHashtagDB(postHashtags[i])
                     hashtagID = createResponse.rows[0].id;
                 } else {
                     hashtagID = findResponse.rows[0].id;
@@ -54,7 +54,7 @@ export async function getPostsByUserID(req, res) {
         const posts = await getPostsByUserIDDB(id);
         const { rows: hashtags } = await hashtagTop10DB();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
-        const {rows: user} = await getUserByIDDB(id);
+        const { rows: user } = await getUserByIDDB(id);
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
 
         const response = [postsWithMetadata, hashtags, user];
@@ -67,7 +67,7 @@ export async function getPostsByUserID(req, res) {
 export async function getPostsByHashtagName(req, res) {
     try {
         const { name } = req.params
-        const hashtag = "#"+name;
+        const hashtag = "#" + name;
         const posts = await getPostsByHashtagDB(hashtag);
         const { rows: hashtags } = await hashtagTop10DB();
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
@@ -81,46 +81,45 @@ export async function getPostsByHashtagName(req, res) {
     }
 }
 
-export async function deleteByID(req,res) {
+export async function deleteByID(req, res) {
     const data = req.tokenData
-    const {id} = req.params
-    try{
+    const { id } = req.params
+    try {
         const owner = await getOwner(id);
-        if(!owner.rows[0] || owner.rows[0].user_id!=data.id){return res.sendStatus(405)}
+        if (!owner.rows[0] || owner.rows[0].user_id != data.id) { return res.sendStatus(405) }
         await deleteHashtag(id);
         await deletePost(id);
         res.sendStatus(200)
-    }catch (err) {
+    } catch (err) {
         res.status(500).send(err.message);
     }
 }
 
-export async function editPost(req,res){
-    const {id} = req.params
+export async function editPost(req, res) {
+    const { id } = req.params
     const data = req.tokenData
-    const {description} = req.body
-    try{
+    const { description } = req.body
+    try {
         const owner = await getOwner(id);
-        if(!owner.rows[0] || owner.rows[0].user_id!=data.id){return res.sendStatus(405)}
-        await editPostDB(id,description);
+        if (!owner.rows[0] || owner.rows[0].user_id != data.id) { return res.sendStatus(405) }
+        await editPostDB(id, description);
         res.sendStatus(200)
-    }catch (err) {
+    } catch (err) {
         res.status(500).send(err.message);
     }
 }
 
 async function getMetadataForEachLink(posts) {
+
+
     const metadataPromises = posts.map(async (post) => {
         try {
-            const metadata = urlMetadata(post.shared_link);
-            console.clear()
-            console.log(post.id)
-            console.log(post.post_id)
+            const metadata = await urlMetadata(post.shared_link);
             return {
                 name: post.name,
                 avatar: post.avatar,
                 post_id: post.id || post.post_id,
-                likes:post.likes,
+                likes: post.likes,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
@@ -133,7 +132,7 @@ async function getMetadataForEachLink(posts) {
             return {
                 name: post.name,
                 avatar: post.avatar,
-                post_id: post.id,
+                post_id: post.id || post.post_id,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
@@ -145,5 +144,5 @@ async function getMetadataForEachLink(posts) {
     });
 
 
-    return await Promise.all(metadataPromises);
+    return Promise.all(metadataPromises);
 }

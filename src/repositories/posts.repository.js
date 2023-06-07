@@ -29,11 +29,7 @@ export function getPostsByUserIDDB(id) {
 `, [id]
     );
 }
-// SELECT posts.shared_link, posts.description, users.name, users.avatar, posts.user_id
-//     FROM posts
-//     JOIN users ON posts.user_id = users.id
-//     WHERE posts.user_id = $1
-//     ORDER BY posts.created_at DESC;`,
+
 
 export function insertPost(user_id, shared_link, description) {
     return db.query(`
@@ -43,9 +39,9 @@ export function insertPost(user_id, shared_link, description) {
     );
 }
 
-export function listLast20Posts() {
+export function listLast20Posts(id) {
     return db.query(`
-    SELECT 
+        SELECT 
         posts.shared_link,
         posts.description,
         posts.user_id,
@@ -57,6 +53,8 @@ export function listLast20Posts() {
         posts
         JOIN users ON posts.user_id = users.id
         LEFT JOIN likes ON posts.id = likes.post_id
+        JOIN followers ON users.id = followers.user_followed
+    WHERE followers.user_id=$1
     GROUP BY
         posts.shared_link,
         posts.description,
@@ -67,7 +65,7 @@ export function listLast20Posts() {
     ORDER BY
         posts.created_at DESC
     LIMIT 20;
-    `);
+    `, [id]);
 }
 
 export function getPostsByHashtagDB(name) {

@@ -115,3 +115,22 @@ export function editPostDB(id, description) {
     WHERE id=$2
     `, [description, id])
 }
+
+export function getPostByID(id) {
+    return db.query(`SELECT * FROM posts WHERE id=$1;`, [id])
+}
+
+export function insertRepostIntoPosts(user_id, shared_link, description, is_repost) {
+    return db.query(`
+        INSERT INTO posts (user_id, shared_link, description, is_repost)
+        VALUES ($1, $2, $3, $4) RETURNING id;`,
+        [user_id, shared_link, description, is_repost]
+    );
+}
+
+export function createRepostRelation(post_id, repost_id, user_id) {
+    return db.query(`
+    INSERT INTO reposts (post_id, repost_id, user_id) 
+    VALUES ($1, $2, $3);`, 
+    [post_id, repost_id, user_id])
+}

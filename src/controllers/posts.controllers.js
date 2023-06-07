@@ -1,5 +1,5 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, getPostByID, insertRepostIntoPosts, createRepostRelation } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 
@@ -145,4 +145,29 @@ async function getMetadataForEachLink(posts) {
 
 
     return Promise.all(metadataPromises);
+}
+
+export async function sharePost(req, res) {
+    const { id } = req.tokenData;
+    const { post_id } = req.body;
+
+    try {
+        const og_post = await getPostByID(post_id);
+        console.log(og_post);
+        if (!og_post.rowCount) return res.status(404).send({ message: "Original post doesn't exist" })
+
+        const repost = {
+            user_id: og_post.rows[0].user_id,
+            shared_link: og_post.rows[0].shared_link,
+            description: og_post.rows[0].description,
+            is_repost: true
+        }
+
+        const repostDB = await insertRepostIntoPosts(repost.user_id, repost.shared_link, repost.description, repost.is_repost);
+        await createRepostRelation(post_id, repostDB.rows[0].id, id);
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 }

@@ -62,8 +62,8 @@ export async function getIsFollowing(req, res) {
     try {
         const { id: userOwnerID } = req.tokenData
         const { id: isFollowedID } = req.params
-        const { rowCount } = await getIsFollowingDB(userOwnerID, isFollowedID)
-        res.send(rowCount > 0)
+        const resp = await getIsFollowingDB(userOwnerID, isFollowedID)
+        res.send(Number(resp.rows[0].count) > 0)
     } catch (err) {
         console.log(err)
         res.status(500).send(err.message);

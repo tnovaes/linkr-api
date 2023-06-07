@@ -110,8 +110,6 @@ export async function editPost(req, res) {
 }
 
 async function getMetadataForEachLink(posts) {
-
-
     const metadataPromises = posts.map(async (post) => {
         try {
             const metadata = await urlMetadata(post.shared_link);
@@ -133,6 +131,7 @@ async function getMetadataForEachLink(posts) {
                 name: post.name,
                 avatar: post.avatar,
                 post_id: post.id || post.post_id,
+                likes: post.likes,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,

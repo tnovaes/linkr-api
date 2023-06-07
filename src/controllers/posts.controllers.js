@@ -2,6 +2,7 @@ import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from
 import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
+import { hasFriendsAsFollowed } from "../repositories/followers.repository.js";
 
 export async function publishPost(req, res) {
     const { id } = req.tokenData;
@@ -32,16 +33,17 @@ export async function publishPost(req, res) {
 }
 
 export async function getPosts(req, res) {
+    const {id} = req.tokenData
     try {
-        const posts = await listLast20Posts();
-        const { rows: hashtags } = await hashtagTop10DB();
-        if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
-
+        const hasFriendsAdded = await hasFriendsAsFollowed(id)
+        console.log(hasFriendsAdded.rowCount)
+        const hasFriends= hasFriendsAdded.rowCount > 0
+        const [posts, { rows: hashtags }  ] = await Promise.all([listLast20Posts(id), hashtagTop10DB()])
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
-
-        const response = [postsWithMetadata, hashtags];
+        const response = [postsWithMetadata, hashtags, {hasFriends}];
         res.status(200).send(response);
     } catch (err) {
+        console.log(err)
         res.status(500).send(err.message);
     }
 }

@@ -18,3 +18,9 @@ export function getIsFollowingDB(user_id, followerID){
         [user_id, followerID]
     );
 }
+export function hasFriendsAsFollowed(user_id){
+    return db.query(`
+        select * from followers WHERE user_id=$1 limit 1;`,
+        [user_id]
+    );
+}

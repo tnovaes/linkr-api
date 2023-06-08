@@ -170,14 +170,13 @@ export async function sharePost(req, res) {
         if (!og_post.rowCount) return res.status(404).send({ message: "Original post doesn't exist" })
 
         const repost = {
-            user_id: og_post.rows[0].user_id,
+            user_id: id,
             shared_link: og_post.rows[0].shared_link,
             description: og_post.rows[0].description,
-            repost_original_id: post_id
+            original_post_id: post_id
         }
 
-        const repostDB = await insertRepostIntoPosts(repost.user_id, repost.shared_link, repost.description, repost.repost_original_id);
-        await createRepostRelation(repostDB.rows[0].id, id);
+        await insertRepostIntoPosts(repost.user_id, repost.shared_link, repost.description, repost.original_post_id);
 
         res.sendStatus(200);
     } catch (err) {

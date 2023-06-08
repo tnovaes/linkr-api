@@ -1,8 +1,9 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, getPostByID, insertRepostIntoPosts, createRepostRelation } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 import { hasFriendsAsFollowed } from "../repositories/followers.repository.js";
+import { getComments } from "../repositories/comments.repository.js";
 
 export async function publishPost(req, res) {
     const { id } = req.tokenData;
@@ -40,7 +41,8 @@ export async function getPosts(req, res) {
         const hasFriends= hasFriendsAdded.rowCount > 0
         const [posts, { rows: hashtags }  ] = await Promise.all([listLast20Posts(id), hashtagTop10DB()])
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
-        const response = [postsWithMetadata, hashtags, {hasFriends}];
+        const PostsWithComments = await addCommentOnPosts(postsWithMetadata);
+        const response = [PostsWithComments, hashtags, {hasFriends}];
         res.status(200).send(response);
     } catch (err) {
         console.log(err)
@@ -111,6 +113,16 @@ export async function editPost(req, res) {
     }
 }
 
+async function addCommentOnPosts(posts){
+    const { rows :cm } = await getComments()
+    const newPostArray = posts.map((post)=>{
+        const comments = cm.filter(comment => comment.post_id === post.post_id)
+        return {...post, comments}
+    })
+
+    return newPostArray
+}
+
 async function getMetadataForEachLink(posts) {
     const metadataPromises = posts.map(async (post) => {
         try {
@@ -146,4 +158,29 @@ async function getMetadataForEachLink(posts) {
 
 
     return Promise.all(metadataPromises);
+}
+
+export async function sharePost(req, res) {
+    const { id } = req.tokenData;
+    const { post_id } = req.body;
+
+    try {
+        const og_post = await getPostByID(post_id);
+        console.log(og_post);
+        if (!og_post.rowCount) return res.status(404).send({ message: "Original post doesn't exist" })
+
+        const repost = {
+            user_id: og_post.rows[0].user_id,
+            shared_link: og_post.rows[0].shared_link,
+            description: og_post.rows[0].description,
+            repost_original_id: post_id
+        }
+
+        const repostDB = await insertRepostIntoPosts(repost.user_id, repost.shared_link, repost.description, repost.repost_original_id);
+        await createRepostRelation(repostDB.rows[0].id, id);
+
+        res.sendStatus(200);
+    } catch (err) {
+        res.status(500).send(err.message);
+    }
 }

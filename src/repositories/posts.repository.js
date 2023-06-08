@@ -113,3 +113,9 @@ export function editPostDB(id, description) {
     WHERE id=$2
     `, [description, id])
 }
+
+export function postById(id){
+    return db.query(`
+    SELECT * FROM posts WHERE id = $1
+    `,[id])
+}

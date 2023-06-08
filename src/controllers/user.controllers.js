@@ -6,6 +6,7 @@ export async function getUsersBySearchText(req, res) {
     const { searchText } = req.body
     try {
         const users = await getUsersBySearchTextDB(id, searchText)
+        console.log(users)
         res.send(users.rows);
     } catch (err) {
         res.status(500).send(err.message);

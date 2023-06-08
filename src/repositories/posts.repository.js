@@ -29,11 +29,7 @@ export function getPostsByUserIDDB(id) {
 `, [id]
     );
 }
-// SELECT posts.shared_link, posts.description, users.name, users.avatar, posts.user_id
-//     FROM posts
-//     JOIN users ON posts.user_id = users.id
-//     WHERE posts.user_id = $1
-//     ORDER BY posts.created_at DESC;`,
+
 
 export function insertPost(user_id, shared_link, description) {
     return db.query(`
@@ -43,31 +39,85 @@ export function insertPost(user_id, shared_link, description) {
     );
 }
 
-export function listLast20Posts() {
+export function listLast20Posts(id) {
     return db.query(`
     SELECT 
-        posts.shared_link,
-        posts.description,
-        posts.user_id,
-        posts.id,
-        users.name,
-        users.avatar,
-        COUNT(likes.post_id) AS likes
-    FROM
-        posts
-        JOIN users ON posts.user_id = users.id
-        LEFT JOIN likes ON posts.id = likes.post_id
-    GROUP BY
-        posts.shared_link,
-        posts.description,
-        posts.user_id,
-        posts.id,
-        users.name,
-        users.avatar
-    ORDER BY
-        posts.created_at DESC
-    LIMIT 20;
-    `);
+    posts.shared_link,
+    posts.description,
+    posts.user_id,
+    posts.id,
+    CASE WHEN posts.original_post_id IS NULL THEN users.name ELSE original_user.name END AS name,
+    CASE WHEN posts.original_post_id IS NULL THEN users.avatar ELSE original_user.avatar END AS avatar,
+    CASE WHEN posts.original_post_id IS NULL THEN NULL ELSE repost_user.name END AS reposter_name,
+    CASE WHEN posts.original_post_id IS NULL THEN post_likes.likes 
+     ELSE (SELECT COUNT(*) FROM likes WHERE post_id = posts.original_post_id) END AS likes,
+    CASE WHEN posts.original_post_id IS NULL THEN COALESCE(repost_counts.repost_count, 0)
+         ELSE COALESCE(repost_occurrences.repost_count, 0) END AS repost_count
+FROM
+    posts
+    JOIN users ON posts.user_id = users.id
+    LEFT JOIN posts AS original_posts ON posts.original_post_id = original_posts.id
+    LEFT JOIN users AS original_user ON original_posts.user_id = original_user.id
+    LEFT JOIN users AS repost_user ON posts.user_id = repost_user.id
+    LEFT JOIN (
+        SELECT 
+            post_id,
+            COUNT(*) AS likes
+        FROM
+            likes
+        GROUP BY
+            post_id
+    ) AS post_likes ON posts.id = post_likes.post_id
+    LEFT JOIN (
+        SELECT 
+            posts.original_post_id,
+            COUNT(*) AS likes
+        FROM
+            posts
+            JOIN likes ON posts.original_post_id = likes.post_id
+        GROUP BY
+            posts.original_post_id
+    ) AS original_post_likes ON posts.original_post_id = original_post_likes.original_post_id
+    LEFT JOIN (
+        SELECT 
+            original_post_id,
+            COUNT(*) AS repost_count
+        FROM
+            posts
+        WHERE
+            original_post_id IS NOT NULL
+        GROUP BY
+            original_post_id
+    ) AS repost_counts ON posts.id = repost_counts.original_post_id
+    LEFT JOIN (
+        SELECT 
+            original_post_id,
+            COUNT(*) AS repost_count
+        FROM
+            posts
+        WHERE
+            original_post_id IS NOT NULL
+        GROUP BY
+            original_post_id
+    ) AS repost_occurrences ON posts.original_post_id = repost_occurrences.original_post_id
+    JOIN followers ON users.id = followers.user_followed
+WHERE followers.user_id=$1
+GROUP BY
+    posts.shared_link,
+    posts.description,
+    posts.user_id,
+    posts.id,
+    CASE WHEN posts.original_post_id IS NULL THEN users.name ELSE original_user.name END,
+    CASE WHEN posts.original_post_id IS NULL THEN users.avatar ELSE original_user.avatar END,
+    CASE WHEN posts.original_post_id IS NULL THEN NULL ELSE repost_user.name END,
+    post_likes.likes,
+    original_post_likes.likes,
+    CASE WHEN posts.original_post_id IS NULL THEN COALESCE(repost_counts.repost_count, 0)
+         ELSE COALESCE(repost_occurrences.repost_count, 0) END
+ORDER BY
+    posts.created_at DESC
+    LIMIT 20;`,
+        [id]);
 }
 
 export function getPostsByHashtagDB(name) {
@@ -120,72 +170,92 @@ export function getPostByID(id) {
     return db.query(`SELECT * FROM posts WHERE id=$1;`, [id])
 }
 
-export function insertRepostIntoPosts(user_id, shared_link, description, repost_original_id) {
+export function insertRepostIntoPosts(user_id, shared_link, description, original_post_id) {
     return db.query(`
-        INSERT INTO posts (user_id, shared_link, description, repost_original_id)
-        VALUES ($1, $2, $3, $4) RETURNING id;`,
-        [user_id, shared_link, description, repost_original_id]
-    );
-}
-
-export function createRepostRelation(repost_id, user_id) {
-    return db.query(`
-    INSERT INTO reposts (repost_id, user_id) 
-    VALUES ($1, $2);`,
-        [repost_id, user_id]
+        INSERT INTO posts (user_id, shared_link, description, original_post_id)
+        VALUES ($1, $2, $3, $4);`,
+        [user_id, shared_link, description, original_post_id]
     );
 }
 
 export function getAllPostsAndRepostsInfo() {
     return db.query(`
-    SELECT
-        posts.shared_link,
-        posts.description,
-        posts.user_id,
-        posts.id,
-        users.name,
-        users.avatar,
-        (
-            SELECT COUNT(*)
-            FROM likes AS l
-            WHERE
-                (posts.repost_original_id IS NOT NULL AND l.post_id = posts.repost_original_id) OR
-                (posts.repost_original_id IS NULL AND l.post_id = posts.id)
-        ) AS likes,
-        (
-            SELECT COUNT(*)
-            FROM posts AS p
-            WHERE
-                p.repost_original_id = posts.repost_original_id
-        ) AS repost_original_id_count,
-        (
-            SELECT COUNT(*)
-            FROM posts AS p
-            WHERE
-                p.repost_original_id = posts.id
-        ) AS repost_count,
-        CASE
-            WHEN posts.repost_original_id IS NOT NULL THEN reposts.user_id
-            ELSE NULL
-        END AS repost_user_id
-    FROM
-        posts
-        JOIN users ON posts.user_id = users.id
-        LEFT JOIN likes ON posts.id = likes.post_id
-        LEFT JOIN reposts ON posts.id = reposts.repost_id
-    GROUP BY
-        posts.shared_link,
-        posts.description,
-        posts.user_id,
-        posts.id,
-        users.name,
-        users.avatar,
-        reposts.user_id,
-        posts.repost_original_id
-    ORDER BY
-        posts.created_at DESC;
-    `)
+    SELECT 
+    posts.shared_link,
+    posts.description,
+    posts.user_id,
+    posts.id,
+    CASE WHEN posts.original_post_id IS NULL THEN users.name ELSE original_user.name END AS name,
+    CASE WHEN posts.original_post_id IS NULL THEN users.avatar ELSE original_user.avatar END AS avatar,
+    CASE WHEN posts.original_post_id IS NULL THEN NULL ELSE repost_user.name END AS reposter_name,
+    CASE WHEN posts.original_post_id IS NULL THEN post_likes.likes 
+     ELSE (SELECT COUNT(*) FROM likes WHERE post_id = posts.original_post_id) END AS likes,
+    CASE WHEN posts.original_post_id IS NULL THEN COALESCE(repost_counts.repost_count, 0)
+         ELSE COALESCE(repost_occurrences.repost_count, 0) END AS repost_count
+FROM
+    posts
+    JOIN users ON posts.user_id = users.id
+    LEFT JOIN posts AS original_posts ON posts.original_post_id = original_posts.id
+    LEFT JOIN users AS original_user ON original_posts.user_id = original_user.id
+    LEFT JOIN users AS repost_user ON posts.user_id = repost_user.id
+    LEFT JOIN (
+        SELECT 
+            post_id,
+            COUNT(*) AS likes
+        FROM
+            likes
+        GROUP BY
+            post_id
+    ) AS post_likes ON posts.id = post_likes.post_id
+    LEFT JOIN (
+        SELECT 
+            posts.original_post_id,
+            COUNT(*) AS likes
+        FROM
+            posts
+            JOIN likes ON posts.original_post_id = likes.post_id
+        GROUP BY
+            posts.original_post_id
+    ) AS original_post_likes ON posts.original_post_id = original_post_likes.original_post_id
+    LEFT JOIN (
+        SELECT 
+            original_post_id,
+            COUNT(*) AS repost_count
+        FROM
+            posts
+        WHERE
+            original_post_id IS NOT NULL
+        GROUP BY
+            original_post_id
+    ) AS repost_counts ON posts.id = repost_counts.original_post_id
+    LEFT JOIN (
+        SELECT 
+            original_post_id,
+            COUNT(*) AS repost_count
+        FROM
+            posts
+        WHERE
+            original_post_id IS NOT NULL
+        GROUP BY
+            original_post_id
+    ) AS repost_occurrences ON posts.original_post_id = repost_occurrences.original_post_id
+GROUP BY
+    posts.shared_link,
+    posts.description,
+    posts.user_id,
+    posts.id,
+    CASE WHEN posts.original_post_id IS NULL THEN users.name ELSE original_user.name END,
+    CASE WHEN posts.original_post_id IS NULL THEN users.avatar ELSE original_user.avatar END,
+    CASE WHEN posts.original_post_id IS NULL THEN NULL ELSE repost_user.name END,
+    post_likes.likes,
+    original_post_likes.likes,
+    CASE WHEN posts.original_post_id IS NULL THEN COALESCE(repost_counts.repost_count, 0)
+         ELSE COALESCE(repost_occurrences.repost_count, 0) END
+ORDER BY
+    posts.created_at DESC;`,
+    );
 }
+
 
 
 

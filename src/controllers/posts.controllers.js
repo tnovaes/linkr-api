@@ -3,6 +3,7 @@ import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, d
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 import { hasFriendsAsFollowed } from "../repositories/followers.repository.js";
+import { getComments } from "../repositories/comments.repository.js";
 
 export async function publishPost(req, res) {
     const { id } = req.tokenData;
@@ -40,7 +41,8 @@ export async function getPosts(req, res) {
         const hasFriends= hasFriendsAdded.rowCount > 0
         const [posts, { rows: hashtags }  ] = await Promise.all([listLast20Posts(id), hashtagTop10DB()])
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
-        const response = [postsWithMetadata, hashtags, {hasFriends}];
+        const PostsWithComments = await addCommentOnPosts(postsWithMetadata);
+        const response = [PostsWithComments, hashtags, {hasFriends}];
         res.status(200).send(response);
     } catch (err) {
         console.log(err)
@@ -109,6 +111,16 @@ export async function editPost(req, res) {
     } catch (err) {
         res.status(500).send(err.message);
     }
+}
+
+async function addCommentOnPosts(posts){
+    const { rows :cm } = await getComments()
+    const newPostArray = posts.map((post)=>{
+        const comments = cm.filter(comment => comment.post_id === post.post_id)
+        return {...post, comments}
+    })
+
+    return newPostArray
 }
 
 async function getMetadataForEachLink(posts) {

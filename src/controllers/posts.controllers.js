@@ -1,5 +1,5 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, getPostByID, insertRepostIntoPosts, createRepostRelation } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, getPostByID, insertRepostIntoPosts } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 import { hasFriendsAsFollowed } from "../repositories/followers.repository.js";

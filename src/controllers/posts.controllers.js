@@ -1,5 +1,5 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, getPostByID, insertRepostIntoPosts } from "../repositories/posts.repository.js";
+import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, insertRepostIntoPosts, getPostById } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 import { hasFriendsAsFollowed } from "../repositories/followers.repository.js";
@@ -165,7 +165,7 @@ export async function sharePost(req, res) {
     const { post_id } = req.body;
 
     try {
-        const og_post = await getPostByID(post_id);
+        const og_post = await getPostById(post_id);
         console.log(og_post);
         if (!og_post.rowCount) return res.status(404).send({ message: "Original post doesn't exist" })
 

@@ -167,7 +167,7 @@ export function editPostDB(id, description) {
     `, [description, id])
 }
 
-export function getPostByID(id) {
+export function getPostById(id) {
     return db.query(`SELECT * FROM posts WHERE id=$1;`, [id])
 }
 

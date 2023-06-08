@@ -160,11 +160,11 @@ export async function sharePost(req, res) {
             user_id: og_post.rows[0].user_id,
             shared_link: og_post.rows[0].shared_link,
             description: og_post.rows[0].description,
-            is_repost: true
+            repost_original_id: post_id
         }
 
-        const repostDB = await insertRepostIntoPosts(repost.user_id, repost.shared_link, repost.description, repost.is_repost);
-        await createRepostRelation(post_id, repostDB.rows[0].id, id);
+        const repostDB = await insertRepostIntoPosts(repost.user_id, repost.shared_link, repost.description, repost.repost_original_id);
+        await createRepostRelation(repostDB.rows[0].id, id);
 
         res.sendStatus(200);
     } catch (err) {

@@ -40,7 +40,7 @@ export function insertPost(user_id, shared_link, description) {
     );
 }
 
-export function listLast20Posts(id) {
+export function listPosts(id) {
     return db.query(`
     SELECT 
     posts.shared_link,

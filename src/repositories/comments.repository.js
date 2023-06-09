@@ -7,11 +7,12 @@ export function postCommentDB(text,writer_id,post_id){
 }
 export function getComments(){
     return db.query(`
-    SELECT c.text, c.post_id, u.avatar AS writer_avatar, p.user_id AS post_owner,
+    SELECT DISTINCT c.id, c.text, c.post_id, c.writer_id, u.avatar AS writer_avatar, u.name AS writer_name, p.user_id AS post_owner,
     CASE WHEN f.user_followed IS NOT NULL THEN TRUE ELSE FALSE END AS is_following
     FROM comments c 
     JOIN posts p ON p.id = c.post_id
     JOIN users u ON u.id = c.writer_id
     LEFT JOIN followers f ON f.user_followed = c.writer_id
+    ORDER BY c.id
     `)
 }

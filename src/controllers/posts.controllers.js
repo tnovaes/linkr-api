@@ -60,8 +60,8 @@ export async function getPostsByUserID(req, res) {
         if (!posts.rowCount) return res.status(204).send({ message: "There are no posts yet" });
         const { rows: user } = await getUserByIDDB(id);
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
-
-        const response = [postsWithMetadata, hashtags, user];
+        const PostsWithComments = await addCommentOnPosts(postsWithMetadata);
+        const response = [PostsWithComments, hashtags, user];
         res.status(200).send(response);
     } catch (err) {
         res.status(500).send(err.message);
@@ -115,6 +115,7 @@ export async function editPost(req, res) {
 
 async function addCommentOnPosts(posts){
     const { rows :cm } = await getComments()
+    console.log(cm)
     const newPostArray = posts.map((post)=>{
         const comments = cm.filter(comment => comment.post_id === post.post_id)
         return {...post, comments}

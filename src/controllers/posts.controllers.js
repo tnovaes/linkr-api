@@ -1,5 +1,5 @@
 import { addHashtagPostDB, createHashtagDB, findHashtagDB, hashtagTop10DB } from "../repositories/hashtags.repository.js";
-import { insertPost, listLast20Posts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, insertRepostIntoPosts, getPostById } from "../repositories/posts.repository.js";
+import { insertPost, listPosts, getPostsByUserIDDB, getPostsByHashtagDB, deleteHashtag, deletePost, getOwner, editPostDB, insertRepostIntoPosts, getPostById } from "../repositories/posts.repository.js";
 import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 import { hasFriendsAsFollowed } from "../repositories/followers.repository.js";
@@ -39,7 +39,7 @@ export async function getPosts(req, res) {
         const hasFriendsAdded = await hasFriendsAsFollowed(id)
         console.log(hasFriendsAdded.rowCount)
         const hasFriends= hasFriendsAdded.rowCount > 0
-        const [posts, { rows: hashtags }  ] = await Promise.all([listLast20Posts(id), hashtagTop10DB()])
+        const [posts, { rows: hashtags }  ] = await Promise.all([listPosts(id), hashtagTop10DB()])
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
         const PostsWithComments = await addCommentOnPosts(postsWithMetadata);
         const response = [PostsWithComments, hashtags, {hasFriends}];

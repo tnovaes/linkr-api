@@ -35,11 +35,12 @@ export async function publishPost(req, res) {
 
 export async function getPosts(req, res) {
     const {id} = req.tokenData
+    const {page} = req.query;
+    const offset = page ? Number(page)*10 : 0;
     try {
         const hasFriendsAdded = await hasFriendsAsFollowed(id)
-        console.log(hasFriendsAdded.rowCount)
         const hasFriends= hasFriendsAdded.rowCount > 0
-        const [posts, { rows: hashtags }  ] = await Promise.all([listPosts(id), hashtagTop10DB()])
+        const [posts, { rows: hashtags }  ] = await Promise.all([listPosts(id, offset), hashtagTop10DB()])
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
         const PostsWithComments = await addCommentOnPosts(postsWithMetadata);
         const response = [PostsWithComments, hashtags, {hasFriends}];

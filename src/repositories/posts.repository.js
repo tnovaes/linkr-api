@@ -40,7 +40,7 @@ export function insertPost(user_id, shared_link, description) {
     );
 }
 
-export function listPosts(id) {
+export function listPosts(id, offset) {
     return db.query(`
     SELECT 
     posts.shared_link,
@@ -117,8 +117,9 @@ GROUP BY
          ELSE COALESCE(repost_occurrences.repost_count, 0) END
 ORDER BY
     posts.created_at DESC
-    LIMIT 20;`,
-        [id]);
+    LIMIT 10
+    OFFSET $2;`,
+        [id, offset]);
 }
 
 export function getPostsByHashtagDB(name) {

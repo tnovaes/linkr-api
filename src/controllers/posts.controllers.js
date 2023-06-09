@@ -34,16 +34,17 @@ export async function publishPost(req, res) {
 }
 
 export async function getPosts(req, res) {
-    const {id} = req.tokenData
-    const {page} = req.query;
-    const offset = page ? Number(page)*10 : 0;
+    const { id } = req.tokenData
+    const { page } = req.query;
+    const offset = page ? Number(page) * 10 : 0;
     try {
         const hasFriendsAdded = await hasFriendsAsFollowed(id)
-        const hasFriends= hasFriendsAdded.rowCount > 0
-        const [posts, { rows: hashtags }  ] = await Promise.all([listPosts(id, offset), hashtagTop10DB()])
+        const hasFriends = hasFriendsAdded.rowCount > 0
+        const [posts, { rows: hashtags }] = await Promise.all([listPosts(id, offset), hashtagTop10DB()])
+        console.log(posts.rows);
         const postsWithMetadata = await getMetadataForEachLink(posts.rows);
         const PostsWithComments = await addCommentOnPosts(postsWithMetadata);
-        const response = [PostsWithComments, hashtags, {hasFriends}];
+        const response = [PostsWithComments, hashtags, { hasFriends }];
         res.status(200).send(response);
     } catch (err) {
         console.log(err)
@@ -114,12 +115,17 @@ export async function editPost(req, res) {
     }
 }
 
-async function addCommentOnPosts(posts){
-    const { rows :cm } = await getComments()
-    console.log(cm)
-    const newPostArray = posts.map((post)=>{
-        const comments = cm.filter(comment => comment.post_id === post.post_id)
-        return {...post, comments}
+async function addCommentOnPosts(posts) {
+    const { rows: cm } = await getComments()
+    const newPostArray = posts.map((post) => {
+        const comments = cm.filter(comment => {
+            if (post.original_post_id) {
+              return comment.post_id === post.original_post_id;
+            } else {
+              return comment.post_id === post.post_id;
+            }
+          });
+        return { ...post, comments };
     })
 
     return newPostArray
@@ -133,10 +139,13 @@ async function getMetadataForEachLink(posts) {
                 name: post.name,
                 avatar: post.avatar,
                 post_id: post.id || post.post_id,
+                original_post_id: post.original_post_id || null,
                 likes: post.likes,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
+                reposter_name: post.reposter_name || null,
+                repost_count: post.repost_count,
                 link_title: metadata.title,
                 link_description: metadata.description,
                 link_image: metadata.image
@@ -147,10 +156,13 @@ async function getMetadataForEachLink(posts) {
                 name: post.name,
                 avatar: post.avatar,
                 post_id: post.id || post.post_id,
+                original_post_id: post.original_post_id || null,
                 likes: post.likes,
                 description: post.description,
                 shared_link: post.shared_link,
                 post_owner: post.user_id,
+                reposter_name: post.reposter_name || null,
+                repost_count: post.repost_count,
                 link_title: null,
                 link_description: null,
                 link_image: null

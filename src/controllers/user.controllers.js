@@ -26,6 +26,7 @@ export async function getUserPhoto(req, res) {
     try {
         const { id } = req.params
         const avatar = await getUserPhotoDB(id)
+        console.log(avatar.rows)
         res.send(avatar.rows[0])
     } catch (err) {
         res.status(500).send(err.message);

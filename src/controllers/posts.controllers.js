@@ -4,6 +4,7 @@ import urlMetadata from "url-metadata";
 import { getUserByIDDB } from "../repositories/user.repository.js";
 import { hasFriendsAsFollowed } from "../repositories/followers.repository.js";
 import { getComments } from "../repositories/comments.repository.js";
+import { getTimelineDB } from "../repositories/timeline.query.js";
 
 export async function publishPost(req, res) {
     const { id } = req.tokenData;
@@ -46,6 +47,51 @@ export async function getPosts(req, res) {
         const PostsWithComments = await addCommentOnPosts(postsWithMetadata);
         const response = [PostsWithComments, hashtags, { hasFriends }];
         res.status(200).send(response);
+    } catch (err) {
+        console.log(err)
+        res.status(500).send(err.message);
+    }
+}
+export async function getTimeline(req, res) {
+    const { id } = req.tokenData
+    const { page } = req.query;
+    const offset = page ? Number(page) * 10 : 0;
+    try {
+        const response = await getTimelineDB(id, offset)
+        console.log(response.rows)
+        const Posts = response.rows[0].posts.map(item=> {
+            return item.isrepost ? ({
+                shared_link:item.shared_link,
+                description: item.description,
+                user_id:item.user_id,
+                id:item.id,
+                isRepost: item.isrepost,
+                repost_count: item.repost_count,
+                original_name: item.original_user_name,
+                user_name: item.user_name,
+                original_post_id:item.original_post_id,
+                comments: item.original_comments ? item.original_comments: [],
+                avatar:item.original_avatar ? item.original_avatar : null,
+                likes: item.original_likes_number,
+                original_id: item.original_user_id,
+                user_id: item.user_id,
+            }) : ({
+                shared_link:item.shared_link,
+                description: item.description,
+                user_id:item.user_id,
+                id:item.id,
+                original_id: item.original_user_id,
+                repost_count: item.repost_count,
+                isRepost: item.isrepost,
+                original_name: item.original_user_name,
+                user_name: item.user_name,
+                comments: item.comments ? item.comments: [],
+                avatar:item.avatar ? item.avatar : null,
+                likes: item.likes_number
+            })
+        })
+        // res.status(200).send(response.rows[0].posts);
+        res.status(200).send({posts: Posts, hashtag_count: response.rows[0].hashtag_count, hasFriendsAsFollowed:response.rows[0].has_followers[0].has_followers });
     } catch (err) {
         console.log(err)
         res.status(500).send(err.message);
